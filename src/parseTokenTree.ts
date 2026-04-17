@@ -61,39 +61,33 @@ export function parseTokenTree(
   }
 
   const isToken = (something: unknown): something is Token => {
-    if (isJSObject(something)) {
-      if (
-        Object.hasOwn(something, "$type") &&
-        Object.hasOwn(something, "$value")
-      ) {
-        const partialMapAttempt = something as Partial<Token>
-        return (
-          typeof partialMapAttempt.$type === "string" &&
-          typeof partialMapAttempt.$value !== undefined
-        )
-      }
-      return false
+    if (!isJSObject(something)) {
+      return false;
     }
-    return false
+
+    if (!Object.hasOwn(something, "$type") || !Object.hasOwn(something, "$value")) {
+      return false;
+    }
+
+    const partialMapAttempt = something as Partial<Token>
+    return (
+      typeof partialMapAttempt.$type === "string" &&
+      typeof partialMapAttempt.$value !== undefined
+    )
   }
 
   const isResolvedToken = (something: unknown): something is ResolvedToken => {
-    if (
+    return (
       isJSObject(something) &&
       typeof something["$kind"] === "string" &&
       typeof something["$name"] === "string" &&
       isToken(something)
-    ) {
-      return true
-    }
-    return false
+    )    
   }
   const traversed: ParsedTokenTree = traverse(tokenTree).map(function (
     x: unknown
   ) {
     if (publishMetadata === true) {
-      // generate $kind and $name
-
       if (this.isRoot === false && this.isLeaf === false) {
         if (!isToken(x)) {
           const makeName: string = (
